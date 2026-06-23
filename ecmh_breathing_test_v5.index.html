@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stress Resilience Test — EC Metaphysics Holistic</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:         #1A1714;
+  --ink-soft:    #4A4540;
+  --ink-muted:   #8C8580;
+  --cream:       #FAF8F4;
+  --warm:        #F5F0E8;
+  --gold:        #C9A96E;
+  --gold-light:  #F0E6D3;
+  --gold-dark:   #8C6A35;
+  --teal:        #2D6A5E;
+  --teal-light:  #E4F0ED;
+  --coral:       #C4614A;
+  --coral-light: #F5EAE7;
+  --amber:       #B07D2E;
+  --amber-light: #F5ECD9;
+  --purple:      #5B4B8A;
+  --purple-light:#EEE9F5;
+  --border:      rgba(26,23,20,0.1);
+  --shadow:      0 2px 20px rgba(26,23,20,0.07);
+}
+
+html, body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; flex-direction: column; background: var(--cream); }
+.screen.active { display: flex; }
+
+/* ── TOP BAR ── */
+.top-bar {
+  background: var(--ink);
+  padding: 0.9rem 1.25rem 0.8rem;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.brand-eye  { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 2px; }
+.brand-name { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600; color: var(--cream); }
+.back-btn   { font-size: 12px; color: rgba(255,255,255,0.45); background: none; border: none; cursor: pointer; font-family: 'Montserrat', sans-serif; padding: 6px 0; }
+
+/* ── DARK HERO BAND ── */
+.hero-band {
+  background: var(--ink);
+  padding: 2rem 1.25rem 2rem;
+  border-bottom: 3px solid var(--gold);
+}
+.eyebrow    { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 0.65rem; }
+.hero-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; line-height: 1.2; color: var(--cream); margin-bottom: 0.65rem; }
+.hero-sub   { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.75; font-weight: 300; }
+
+/* ── SCROLL BODY ── */
+.scroll-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+/* ── PAD ── */
+.pad { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; padding-bottom: 3rem; }
+
+/* ── CARD ── */
+.card { background: white; border: 0.5px solid var(--border); border-radius: 14px; padding: 1.1rem 1.25rem; box-shadow: var(--shadow); }
+.card-label { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-dark); font-weight: 600; margin-bottom: 0.6rem; }
+.card-body  { font-size: 13px; color: var(--ink-soft); line-height: 1.75; }
+.card-body strong { color: var(--ink); font-weight: 600; }
+
+/* ── STEPS ── */
+.steps { display: flex; flex-direction: column; gap: 8px; }
+.step-row { display: flex; gap: 12px; align-items: flex-start; }
+.step-n {
+  font-size: 11px; font-weight: 700; color: var(--gold-dark);
+  background: var(--gold-light); border-radius: 6px;
+  width: 24px; height: 24px; min-width: 24px;
+  display: flex; align-items: center; justify-content: center; margin-top: 1px;
+}
+.step-t { font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.step-t strong { color: var(--ink); font-weight: 600; }
+
+/* ── SCORE BANDS ── */
+.bands { display: flex; flex-direction: column; gap: 6px; }
+.band { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px; }
+.band-dot   { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; }
+.band-range { font-size: 12px; font-weight: 600; min-width: 84px; }
+.band-desc  { font-size: 12px; font-weight: 400; }
+/* 4 bands matching v2 thresholds */
+.b-t4  { background: var(--coral-light); }  .b-t4  .band-dot { background: var(--coral); }  .b-t4  .band-range { color: var(--coral); }  .b-t4  .band-desc { color: rgba(196,97,74,0.75); }
+.b-t3  { background: var(--amber-light); }  .b-t3  .band-dot { background: var(--amber); }  .b-t3  .band-range { color: var(--amber); }  .b-t3  .band-desc { color: rgba(176,125,46,0.75); }
+.b-t2  { background: var(--teal-light);  }  .b-t2  .band-dot { background: var(--teal);  }  .b-t2  .band-range { color: var(--teal);  }  .b-t2  .band-desc { color: rgba(45,106,94,0.8); }
+.b-t1  { background: var(--purple-light);}  .b-t1  .band-dot { background: var(--purple);}  .b-t1  .band-range { color: var(--purple);}  .b-t1  .band-desc { color: rgba(91,75,138,0.8); }
+
+/* ── BUTTONS ── */
+.btn {
+  width: 100%; padding: 14px 20px; border-radius: 12px; border: none;
+  font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+  text-align: center; letter-spacing: 0.03em;
+}
+.btn:active { transform: scale(0.98); opacity: 0.88; }
+.btn-gold  { background: var(--gold); color: var(--ink); }
+.btn-ghost { background: white; border: 0.5px solid var(--border); color: var(--ink-soft); font-size: 13px; padding: 12px 20px; }
+
+/* ══════════════
+   TIMER SCREEN
+══════════════ */
+.timer-wrap {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: space-between;
+  padding: 2.5rem 1.25rem 2.5rem;
+  min-height: calc(100vh - 56px);
+  background: var(--ink);
+}
+.timer-phase { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 2rem; }
+.ring-wrap   { position: relative; width: 200px; height: 200px; margin: 0 auto 2rem; }
+.ring-svg    { width: 200px; height: 200px; transform: rotate(-90deg); }
+.ring-bg     { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5; }
+.ring-fill   { fill: none; stroke: var(--gold); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 0.15s linear; }
+.ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+.ring-time   { font-family: 'Playfair Display', serif; font-size: 60px; font-weight: 700; color: var(--cream); line-height: 1; letter-spacing: -2px; }
+.ring-unit   { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-top: 5px; }
+
+@keyframes pulse-out {
+  0%   { transform: translate(-50%,-50%) scale(1); opacity: 0.18; }
+  100% { transform: translate(-50%,-50%) scale(1.6); opacity: 0; }
+}
+.pulse { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 200px; height: 200px; border-radius: 50%; border: 1px solid var(--gold); animation: pulse-out 3s ease-out infinite; pointer-events: none; }
+.pulse:nth-child(2) { animation-delay: 1s; }
+.pulse:nth-child(3) { animation-delay: 2s; }
+.timer-hint { font-size: 13px; color: rgba(255,255,255,0.45); text-align: center; line-height: 1.7; max-width: 260px; margin: 0 auto; min-height: 44px; font-weight: 300; }
+
+/* ══════════════
+   TRIAGE SCREEN
+══════════════ */
+.triage-q { font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 600; color: var(--ink); line-height: 1.35; margin-bottom: 1.25rem; }
+.triage-progress { display: flex; gap: 6px; justify-content: center; margin-bottom: 1.75rem; }
+.triage-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+.triage-dot.done   { background: var(--gold); }
+.triage-dot.active { background: rgba(201,169,110,0.45); }
+
+.triage-options { display: flex; flex-direction: column; gap: 10px; }
+.triage-opt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 12px;
+  border: 0.5px solid var(--border); background: white;
+  cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  box-shadow: var(--shadow); -webkit-tap-highlight-color: transparent;
+}
+.triage-opt.selected { border-color: var(--gold); background: var(--gold-light); }
+.triage-opt-marker {
+  width: 20px; height: 20px; min-width: 20px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--cream);
+  display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s;
+}
+.triage-opt.selected .triage-opt-marker { border-color: var(--gold); background: var(--gold); }
+.triage-opt-marker::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: white; opacity: 0; transition: opacity 0.15s; }
+.triage-opt.selected .triage-opt-marker::after { opacity: 1; }
+.triage-opt-text { font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+.triage-opt-text strong { color: var(--ink); font-weight: 600; }
+.triage-opt.selected .triage-opt-text { color: var(--ink); }
+
+/* ══════════════
+   RESULT SCREEN
+══════════════ */
+.score-hero {
+  background: var(--ink); padding: 2rem 1.25rem 1.75rem;
+  text-align: center; border-bottom: 3px solid var(--gold);
+}
+.score-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 14px; border-radius: 99px;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1);
+}
+.score-num     { font-family: 'Playfair Display', serif; font-size: 80px; font-weight: 700; line-height: 1; margin-bottom: 0.2rem; }
+.score-unit    { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 1rem; }
+.score-level   { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: var(--cream); margin-bottom: 0.5rem; line-height: 1.3; }
+.score-tagline { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.75; max-width: 320px; margin: 0 auto; font-weight: 300; }
+
+.result-pad { padding: 1.25rem; display: flex; flex-direction: column; gap: 0; padding-bottom: 3rem; background: var(--cream); }
+.r-label {
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-muted); font-weight: 600;
+  padding: 1.25rem 0 0.65rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.r-label::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
+
+.r-card { background: white; border: 0.5px solid var(--border); border-radius: 14px; padding: 1.1rem 1.25rem; box-shadow: var(--shadow); margin-bottom: 10px; }
+.r-card-lbl { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-dark); font-weight: 600; margin-bottom: 0.5rem; }
+.r-card p   { font-size: 13px; color: var(--ink-soft); line-height: 1.8; }
+.r-card p + p { margin-top: 0.6rem; }
+.r-card strong { color: var(--ink); font-weight: 600; }
+
+.tcm-card { background: var(--ink); border-radius: 14px; padding: 1.25rem; margin-bottom: 10px; border-left: 3px solid var(--gold); }
+.tcm-eye   { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 0.4rem; }
+.tcm-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; color: var(--cream); margin-bottom: 0.5rem; line-height: 1.35; }
+.tcm-body  { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.8; font-weight: 300; }
+.tcm-body strong { color: var(--cream); font-weight: 600; }
+
+.acu-card { background: white; border: 0.5px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); margin-bottom: 10px; }
+.acu-header  { padding: 1rem 1.25rem 0.75rem; border-bottom: 0.5px solid var(--border); background: var(--warm); }
+.acu-name    { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: var(--ink); }
+.acu-sub     { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+.acu-body    { padding: 1rem 1.25rem; }
+.acu-location { display: flex; gap: 10px; align-items: flex-start; background: var(--gold-light); border-radius: 9px; padding: 10px 12px; margin-bottom: 12px; }
+.acu-loc-icon { font-size: 17px; margin-top: 2px; }
+.acu-loc-text { font-size: 13px; color: var(--gold-dark); line-height: 1.6; font-weight: 500; }
+.acu-steps   { display: flex; flex-direction: column; gap: 7px; }
+.acu-step    { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.acu-step-n  { font-size: 10px; font-weight: 700; color: var(--gold-dark); background: var(--gold-light); border-radius: 5px; width: 20px; height: 20px; min-width: 20px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+
+.breath-card   { background: white; border: 0.5px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); margin-bottom: 10px; }
+.breath-header { padding: 1rem 1.25rem 0.75rem; border-bottom: 0.5px solid var(--border); background: var(--warm); display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.breath-name   { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+.breath-tag    { font-size: 9px; font-weight: 600; padding: 3px 10px; border-radius: 99px; white-space: nowrap; margin-top: 4px; letter-spacing: 0.06em; text-transform: uppercase; }
+.breath-body   { padding: 1rem 1.25rem; }
+.breath-effect { font-size: 13px; color: var(--teal); background: var(--teal-light); border-radius: 9px; padding: 10px 13px; margin-bottom: 12px; line-height: 1.65; font-weight: 500; }
+.breath-steps  { display: flex; flex-direction: column; gap: 7px; }
+.breath-step   { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.breath-step-n { font-size: 10px; font-weight: 700; color: var(--teal); background: var(--teal-light); border-radius: 5px; width: 20px; height: 20px; min-width: 20px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+
+.screenshot-note { background: var(--gold-light); border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; padding: 12px 14px; margin: 0.5rem 0 12px; font-size: 13px; color: var(--gold-dark); line-height: 1.65; display: flex; gap: 10px; align-items: flex-start; }
+.screenshot-note strong { font-weight: 600; }
+
+.handoff { background: var(--ink); border-radius: 14px; padding: 1.5rem 1.25rem; text-align: center; margin-bottom: 10px; border-top: 3px solid var(--gold); }
+.handoff-eye   { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 0.5rem; }
+.handoff-title { font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 700; color: var(--cream); line-height: 1.3; margin-bottom: 0.5rem; }
+.handoff-body  { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.75; margin-bottom: 1.25rem; font-weight: 300; }
+.handoff-btn   { display: block; width: 100%; padding: 14px 20px; background: var(--gold); color: var(--ink); border-radius: 12px; border: none; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; letter-spacing: 0.03em; }
+
+.retake { text-align: center; padding: 0.5rem 0 1rem; }
+.retake button { font-size: 12px; color: var(--ink-muted); background: none; border: none; cursor: pointer; font-family: 'Montserrat', sans-serif; padding: 8px; }
+
+.handoff-actions { display: flex; flex-direction: column; gap: 10px; }
+.handoff-action-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-radius: 12px;
+  text-decoration: none; transition: opacity 0.15s;
+  border: none; cursor: pointer; font-family: 'Montserrat', sans-serif;
+  text-align: left;
+}
+.handoff-action-btn:active { opacity: 0.8; }
+.handoff-primary  { background: var(--gold); color: var(--ink); }
+.handoff-secondary { background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.12); color: var(--cream); }
+.ha-icon  { font-size: 20px; min-width: 28px; text-align: center; }
+.ha-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.ha-sub   { font-size: 11px; opacity: 0.65; font-weight: 300; line-height: 1.4; }
+.handoff-primary .ha-sub { opacity: 0.7; color: var(--ink); }
+
+@media (max-width: 360px) {
+  .hero-title { font-size: 24px; }
+  .ring-time  { font-size: 50px; }
+  .score-num  { font-size: 66px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse { animation: none; }
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════
+     SCREEN 1 · INTRO
+══════════════════════════ -->
+<div id="s-intro" class="screen active">
+  <div class="top-bar">
+    <div><div class="brand-eye">EC Metaphysics Holistic</div><div class="brand-name">ECMH</div></div>
+  </div>
+  <div class="scroll-body">
+    <div class="hero-band">
+      <div class="eyebrow">Free Stress Assessment</div>
+      <h1 class="hero-title">How resilient is your nervous system right now?</h1>
+      <p class="hero-sub">A 60-second breath test that reveals how your body is actually handling stress — not how you think it is.</p>
+    </div>
+    <div class="pad">
+      <div class="card">
+        <div class="card-label">What this measures</div>
+        <div class="card-body">Your body has a built-in stress signal — the urge to breathe. When stress is high, that signal fires <strong>too early and too often</strong>, keeping you locked in fight-or-flight without you realising it.<br><br>This test measures how long and slowly you can exhale. That single number reveals your nervous system's current state.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">How to do it</div>
+        <div class="steps">
+          <div class="step-row"><div class="step-n">1</div><div class="step-t"><strong>Sit comfortably</strong> — spine upright, shoulders relaxed, hands in lap.</div></div>
+          <div class="step-row"><div class="step-n">2</div><div class="step-t"><strong>Breathe normally</strong> for 4–5 breaths through the nose. No effort.</div></div>
+          <div class="step-row"><div class="step-n">3</div><div class="step-t"><strong>Take one full inhale</strong> through the nose — belly first, then ribs, then chest.</div></div>
+          <div class="step-row"><div class="step-n">4</div><div class="step-t"><strong>Tap Start</strong> — then exhale as slowly and softly as you can through the nose. No squeezing or straining.</div></div>
+          <div class="step-row"><div class="step-n">5</div><div class="step-t"><strong>Tap Stop</strong> the moment your exhale ends naturally — when there is no more air left to release.</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">What your score means</div>
+        <div class="bands">
+          <div class="band b-t4"><div class="band-dot"></div><span class="band-range">Under 20 sec</span><span class="band-desc">High dysregulation</span></div>
+          <div class="band b-t3"><div class="band-dot"></div><span class="band-range">20 – 40 sec</span><span class="band-desc">Moderate–high activation</span></div>
+          <div class="band b-t2"><div class="band-dot"></div><span class="band-range">40 – 60 sec</span><span class="band-desc">Mild activation</span></div>
+          <div class="band b-t1"><div class="band-dot"></div><span class="band-range">60 sec +</span><span class="band-desc">Well regulated</span></div>
+        </div>
+      </div>
+
+      <button class="btn btn-gold" onclick="go('s-prep')">I'm ready — begin the test →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════
+     SCREEN 2 · PREP
+══════════════════════════ -->
+<div id="s-prep" class="screen">
+  <div class="top-bar">
+    <div><div class="brand-eye">EC Metaphysics Holistic</div><div class="brand-name">Get Ready</div></div>
+    <button class="back-btn" onclick="go('s-intro')">← Back</button>
+  </div>
+  <div class="scroll-body">
+    <div class="hero-band">
+      <div class="eyebrow">Before you begin</div>
+      <h1 class="hero-title">Find a comfortable position</h1>
+      <p class="hero-sub">Take a moment to settle. The test is most accurate when you are calm before you start.</p>
+    </div>
+    <div class="pad">
+      <div class="card">
+        <div class="card-label">Quick checklist</div>
+        <div class="steps">
+          <div class="step-row"><div class="step-n">🪑</div><div class="step-t"><strong>Sit upright</strong> — feet flat on the floor, hands resting in your lap.</div></div>
+          <div class="step-row"><div class="step-n">😮‍💨</div><div class="step-t"><strong>Breathe normally</strong> for a few breaths — not deep, just natural.</div></div>
+          <div class="step-row"><div class="step-n">📱</div><div class="step-t"><strong>Keep this screen visible</strong> — you'll tap Stop when your exhale ends.</div></div>
+          <div class="step-row"><div class="step-n">⚠️</div><div class="step-t">Skip if you have just exercised, had caffeine in the last hour, or have a respiratory condition.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">When you tap Start</div>
+        <div class="card-body">Take one full inhale through the nose. Then <strong>exhale as slowly and softly as possible</strong> — like a long, gentle sigh. No squeezing. No forcing.<br><br>Tap Stop the moment there is no more air left to release.</div>
+      </div>
+      <button class="btn btn-gold" onclick="startTimer()">Start the exhale timer →</button>
+      <button class="btn btn-ghost" onclick="go('s-intro')">← Go back</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════
+     SCREEN 3 · TIMER
+══════════════════════════ -->
+<div id="s-timer" class="screen" style="background:var(--ink);">
+  <div class="top-bar">
+    <div><div class="brand-eye">EC Metaphysics Holistic</div><div class="brand-name">Exhale slowly…</div></div>
+  </div>
+  <div class="timer-wrap">
+    <div style="text-align:center;width:100%;">
+      <div class="timer-phase">Exhale timer running</div>
+      <div class="ring-wrap">
+        <div class="pulse"></div><div class="pulse"></div><div class="pulse"></div>
+        <svg class="ring-svg" viewBox="0 0 200 200">
+          <circle class="ring-bg"   cx="100" cy="100" r="90"/>
+          <circle class="ring-fill" id="ring-fill" cx="100" cy="100" r="90"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-time" id="t-display">0</div>
+          <div class="ring-unit">seconds</div>
+        </div>
+      </div>
+      <div class="timer-hint" id="t-hint">Exhale slowly and steadily through your nose</div>
+    </div>
+    <button class="btn btn-gold" onclick="stopTimer()" style="max-width:320px;font-size:15px;padding:16px 20px;">
+      Exhale complete — stop ✓
+    </button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════
+     SCREEN 4 · TRIAGE
+     Triggers only for <20s
+══════════════════════════ -->
+<div id="s-triage" class="screen">
+  <div class="top-bar">
+    <div><div class="brand-eye">EC Metaphysics Holistic</div><div class="brand-name">Quick check-in</div></div>
+  </div>
+  <div class="scroll-body">
+    <div class="hero-band">
+      <div class="eyebrow">Your score is under 20 seconds</div>
+      <h1 class="hero-title">How does your body feel right now?</h1>
+      <p class="hero-sub">3 quick questions — tap the one that feels most true. This helps us understand exactly what your body needs.</p>
+    </div>
+    <div class="pad">
+      <div class="triage-progress">
+        <div class="triage-dot active" id="td-0"></div>
+        <div class="triage-dot"        id="td-1"></div>
+        <div class="triage-dot"        id="td-2"></div>
+      </div>
+
+      <div id="tq-0">
+        <div class="triage-q">Right now, do you feel more…</div>
+        <div class="triage-options">
+          <div class="triage-opt" onclick="selectTriage(0,'A',this)"><div class="triage-opt-marker"></div><div class="triage-opt-text"><strong>Wired or tense</strong> — anxious, restless, hard to switch off</div></div>
+          <div class="triage-opt" onclick="selectTriage(0,'B',this)"><div class="triage-opt-marker"></div><div class="triage-opt-text"><strong>Heavy or flat</strong> — drained, foggy, no energy to move</div></div>
+        </div>
+      </div>
+      <div id="tq-1" style="display:none;">
+        <div class="triage-q">What is your mind doing?</div>
+        <div class="triage-options">
+          <div class="triage-opt" onclick="selectTriage(1,'A',this)"><div class="triage-opt-marker"></div><div class="triage-opt-text"><strong>Racing or busy</strong> — thoughts won't slow down</div></div>
+          <div class="triage-opt" onclick="selectTriage(1,'B',this)"><div class="triage-opt-marker"></div><div class="triage-opt-text"><strong>Foggy or blank</strong> — hard to think clearly</div></div>
+        </div>
+      </div>
+      <div id="tq-2" style="display:none;">
+        <div class="triage-q">Where do you feel it most in your body?</div>
+        <div class="triage-options">
+          <div class="triage-opt" onclick="selectTriage(2,'A',this)"><div class="triage-opt-marker"></div><div class="triage-opt-text"><strong>Jaw, chest or shoulders</strong> — specific tension or tightness</div></div>
+          <div class="triage-opt" onclick="selectTriage(2,'B',this)"><div class="triage-opt-marker"></div><div class="triage-opt-text"><strong>Just heavy and tired</strong> — limbs feel like lead</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════
+     SCREEN 5 · RESULT
+══════════════════════════ -->
+<div id="s-result" class="screen">
+  <div class="top-bar">
+    <div><div class="brand-eye">EC Metaphysics Holistic</div><div class="brand-name">Your Result</div></div>
+    <button onclick="retake()" style="font-size:11px;color:rgba(255,255,255,0.4);background:none;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;">Retake</button>
+  </div>
+  <div class="scroll-body">
+    <div id="score-hero" class="score-hero"></div>
+    <div id="result-body" class="result-pad"></div>
+  </div>
+</div>
+
+
+<script>
+var timerInt = null, t0 = null, score = 0, triageAnswers = [];
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startTimer() {
+  go('s-timer');
+  t0 = Date.now();
+  var disp = document.getElementById('t-display');
+  var ring = document.getElementById('ring-fill');
+  var hint = document.getElementById('t-hint');
+  timerInt = setInterval(function(){
+    var s = Math.floor((Date.now()-t0)/1000);
+    disp.textContent = s;
+    ring.style.strokeDashoffset = 565 - Math.min(s/80,1)*565;
+    if      (s < 10) hint.textContent = 'Exhale slowly and steadily through your nose';
+    else if (s < 20) hint.textContent = 'Keep going — slow and soft';
+    else if (s < 40) hint.textContent = 'Good — stay relaxed, let the breath flow naturally';
+    else if (s < 60) hint.textContent = 'Strong breath control — keep the exhale smooth';
+    else             hint.textContent = 'Exceptional — your nervous system is very well regulated';
+  }, 100);
+}
+
+function stopTimer() {
+  clearInterval(timerInt);
+  score = Math.floor((Date.now()-t0)/1000);
+  // Triage triggers only under 20s (v2 protocol)
+  if (score < 20) {
+    triageAnswers = []; resetTriage(); go('s-triage');
+  } else if (score < 40) {
+    buildResult('t3'); go('s-result');   // 20–40s = Sympathetic Moderate-High
+  } else if (score < 60) {
+    buildResult('t2'); go('s-result');   // 40–60s = Sympathetic Mild
+  } else {
+    buildResult('t1'); go('s-result');   // 60s+   = Ventral Vagal
+  }
+}
+
+function resetTriage() {
+  for (var i=0;i<3;i++){
+    var q=document.getElementById('tq-'+i);
+    q.style.display=i===0?'block':'none';
+    q.querySelectorAll('.triage-opt').forEach(function(o){o.classList.remove('selected');});
+    document.getElementById('td-'+i).className='triage-dot'+(i===0?' active':'');
+  }
+}
+
+function selectTriage(qi, ans, el) {
+  el.closest('.triage-options').querySelectorAll('.triage-opt').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');
+  triageAnswers[qi] = ans;
+  setTimeout(function(){
+    document.getElementById('td-'+qi).className='triage-dot done';
+    if (qi < 2) {
+      document.getElementById('tq-'+qi).style.display='none';
+      document.getElementById('tq-'+(qi+1)).style.display='block';
+      document.getElementById('td-'+(qi+1)).className='triage-dot active';
+    } else {
+      var aCount = triageAnswers.filter(function(a){return a==='A';}).length;
+      buildResult(aCount>=2 ? 't4a' : 't4b');
+      go('s-result');
+    }
+  }, 320);
+}
+
+// ══════════════════════════
+// TIER DATA — v2 protocol
+// ══════════════════════════
+var TIERS = {
+
+  // ── TIER 1 · 60s+ · Ventral Vagal ──
+  't1': {
+    color:'#5B4B8A', bgLight:'rgba(91,75,138,0.15)', badge:'Tier 1 — Well Regulated',
+    level:'Your nervous system is in a great place today',
+    tagline:'You have real resilience right now. This is the state where you think clearly, feel grounded, and handle what life throws at you — without burning out.',
+    bodyTitle:'What\'s happening inside you',
+    body:'Your exhale was long, smooth, and controlled — a sign your nervous system is not in emergency mode. You have a wide window of tolerance, meaning you can meet stress without being overwhelmed by it.<br><br>This state is worth <strong>protecting and deepening</strong>. Resilience isn\'t fixed — it\'s something you actively maintain.',
+    tcmTitle:'What Chinese Medicine sees',
+    tcmBody:'In TCM, this reflects <strong>Qi flowing smoothly</strong> — no dominant organ imbalance, no stuck or depleted energy. Your body\'s systems are in relative harmony. The practice now is one of deepening and maintenance, not correction.',
+    acuName:'Yìntáng', acuSub:'Integration point · Between your eyebrows',
+    acuLocation:'The midpoint between your eyebrows, at the bridge of your nose.',
+    acuSteps:['Place your middle finger gently between your eyebrows.','Apply light, steady pressure — soft and grounding.','Close your eyes. Take three slow, full breaths.','Hold for 20–30 seconds.','In a regulated state, this point anchors and deepens presence — not to calm, but to integrate.'],
+    breathName:'Nadi Shodhana', breathSub:'Alternate Nostril Breathing',
+    breathTag:'Deepening', breathTagColor:'#5B4B8A', breathTagBg:'#EEE9F5',
+    breathEffect:'Balances the left and right brain hemispheres, deepening an already regulated state into clarity, focus, and calm sustained energy.',
+    breathSteps:['Right thumb closes the right nostril — exhale through the left.','Inhale through the left nostril.','Ring finger closes the left — exhale through the right.','Inhale through the right. That\'s one round.','Continue 5–10 rounds. Inhale 4 counts, exhale 6 counts. Smooth and unhurried.'],
+    handoffLine:'You\'re in an excellent state today. Come speak to our practitioner — we\'ll show you how to sustain and build on this resilience with the right tools.'
+  },
+
+  // ── TIER 2 · 40–60s · Sympathetic Mild ──
+  't2': {
+    color:'#2D6A5E', bgLight:'rgba(45,106,94,0.15)', badge:'Tier 2 — Mild Activation',
+    level:'You\'re managing — but it\'s quietly building',
+    tagline:'Your nervous system has good capacity, but stress is beginning to accumulate. You\'re at exactly the right stage to reset before the pattern deepens.',
+    bodyTitle:'What\'s happening inside you',
+    body:'You\'re not in crisis — but you\'re not fully at ease either. There\'s a low hum of activation in the background: a slight edge to your thoughts, tension you\'ve stopped noticing, energy that feels inconsistent day to day.<br><br>This is the <strong>early warning stage</strong>. Your body is asking for attention before the pattern becomes harder to shift.',
+    tcmTitle:'What Chinese Medicine sees',
+    tcmBody:'TCM reads this as <strong>Liver Qi beginning to stagnate</strong> — the energy that governs smooth flow, decisions, and emotional processing is starting to slow. The Heart–Kidney axis is under mild strain. Caught at this stage, the pattern responds quickly and well.',
+    acuName:'Yìntáng', acuSub:'Calming point · Between your eyebrows',
+    acuLocation:'The midpoint between your eyebrows, at the bridge of your nose.',
+    acuSteps:['Place your middle finger gently between your eyebrows.','Apply firm, steady pressure — grounding, not hard.','Close your eyes. Breathe slowly.','Hold for 30–60 seconds. You may feel a gentle warmth or release.','This point gently settles the mind and supports the transition into a calmer state.'],
+    breathName:'Extended Exhale Breath', breathSub:'4:6 ratio — gentle vagal brake',
+    breathTag:'Calming', breathTagColor:'#2D6A5E', breathTagBg:'#E4F0ED',
+    breathEffect:'A longer exhale activates your body\'s natural brake pedal — gently signalling to your nervous system that it is safe to slow down.',
+    breathSteps:['Inhale through the nose for 4 counts.','Exhale through the nose for 6 counts — longer than the inhale.','Keep the outbreath soft and continuous. No forcing.','Repeat 5–8 rounds. Let the exhale do the work.'],
+    handoffLine:'Your practitioner will guide you through the acupoint and breath — and help you find the right tools to prevent this pattern from deepening.'
+  },
+
+  // ── TIER 3 · 20–40s · Sympathetic Moderate–High ──
+  't3': {
+    color:'#B07D2E', bgLight:'rgba(176,125,46,0.15)', badge:'Tier 3 — Moderate–High Activation',
+    level:'Your stress response is clearly switched on',
+    tagline:'This is the most common result on a first attempt. Your body is working hard — and it\'s telling you it needs support.',
+    bodyTitle:'What\'s happening inside you',
+    body:'When stress builds without release, your nervous system stays in alert mode — even when you\'re sitting still. Breathing becomes shorter, muscles stay braced, and the mind keeps spinning even when you want it to stop.<br><br>This isn\'t a flaw. <strong>Your body is trying to protect you.</strong> The challenge is that staying here drains your energy, focus, and over time, your health.',
+    tcmTitle:'What Chinese Medicine sees',
+    tcmBody:'This pattern shows as <strong>Liver Qi Stagnation</strong> with <strong>Heart Fire building</strong> — energy that should flow freely has become stuck. When the Liver can\'t move Qi smoothly, heat rises to the Heart, creating that restless, wired, hard-to-switch-off feeling you may recognise. The Heart–Kidney axis is under active strain.',
+    acuName:'LI4 — Hégǔ', acuSub:'Release point · Web between thumb and index finger',
+    acuLocation:'The fleshy web between your thumb and index finger — at the highest point of the muscle when you press them gently together.',
+    acuSteps:['Press your right thumb firmly into the web of your left hand.','Apply firm pressure — a slight ache or fullness is normal and means you\'ve found it.','Hold for 30–60 seconds, breathing slowly.','Repeat on the other hand.','This point moves stagnant energy and releases tension from the head, jaw, and face.'],
+    breathName:'Bhramari', breathSub:'Humming Bee Breath — vagal resonance',
+    breathTag:'Releasing', breathTagColor:'#B07D2E', breathTagBg:'#F5ECD9',
+    breathEffect:'The vibration from humming directly stimulates the vagus nerve — your body\'s own pathway to calm. Particularly effective when the mind is racing or won\'t switch off.',
+    breathSteps:['Inhale deeply through the nose.','On the exhale, close your lips and hum steadily — feel the vibration in your chest, throat, and head.','Optional: gently cover your ears with your fingers to deepen the effect.','Let the hum last as long as the breath allows — the longer, the better.','Repeat 6–8 times. Notice how your mind begins to quieten.'],
+    handoffLine:'Your practitioner will guide you through the acupoint and breath — and show you which tools can support your nervous system today.'
+  },
+
+  // ── TIER 4A · <20s · Sympathetic High ──
+  't4a': {
+    color:'#C4614A', bgLight:'rgba(196,97,74,0.15)', badge:'Tier 4 — High Activation',
+    level:'Your system is running on overdrive',
+    tagline:'Your nervous system is in acute stress mode. This is very common — and very workable. Your body is asking for an immediate reset.',
+    bodyTitle:'What\'s happening inside you',
+    body:'When the stress response runs at high intensity, the exhale shortens because the body is braced — muscles tight, breath held high in the chest, mind working overtime. The urge to breathe comes early because your system is on high alert.<br><br><strong>This is your body protecting you</strong> — but the cost is high. Energy, clarity, sleep, digestion, and emotional steadiness all take the hit.',
+    tcmTitle:'What Chinese Medicine sees',
+    tcmBody:'This is acute <strong>Liver Qi Stagnation with Heart Fire</strong> — energy is severely stuck and rising as heat. The Heart–Kidney axis is under significant strain. You may recognise this as jaw tension, palpitations, a mind that won\'t stop, or waking up exhausted despite sleeping. The body needs to release before it can restore.',
+    acuName:'Yìntáng', acuSub:'Emergency calm point · Between your eyebrows',
+    acuLocation:'The midpoint between your eyebrows, at the bridge of your nose.',
+    acuSteps:['Place your middle finger firmly between your eyebrows.','Apply firm, grounding pressure — steady and deliberate.','Close your eyes. Allow the breath to slow.','Hold for 30–60 seconds. Stay with the pressure.','This is the fastest accessible point for acute anxiety — it directly calms the mind\'s alarm signal.'],
+    breathName:'Physiological Sigh', breathSub:'Double inhale + long exhale — fastest reset',
+    breathTag:'Urgent Reset', breathTagColor:'#C4614A', breathTagBg:'#F5EAE7',
+    breathEffect:'The fastest known method to reduce acute stress in real time. The double inhale fully inflates the lungs and rapidly clears the CO₂ buildup driving the panic signal.',
+    breathSteps:['Inhale fully through the nose.','Before exhaling — sniff in one more short, sharp inhale on top.','Then release in one long, slow exhale through the nose or mouth.','Let the exhale be completely passive — just release.','Repeat 1–3 times only. You should feel an immediate shift.'],
+    handoffLine:'Your practitioner will guide you through this reset right now — and show you what your body needs to come back to balance today.'
+  },
+
+  // ── TIER 4B · <20s · Dorsal Vagal ──
+  't4b': {
+    color:'#4A4540', bgLight:'rgba(74,69,64,0.12)', badge:'Tier 4 — Deep Fatigue State',
+    level:'Your body has gone quiet to protect itself',
+    tagline:'This isn\'t weakness or laziness. Your nervous system has been under pressure for so long it has started conserving energy. It needs gentle activation — not more pushing.',
+    bodyTitle:'What\'s happening inside you',
+    body:'When the nervous system is overwhelmed for too long, it doesn\'t always show as anxiety. Sometimes it shows as <strong>shutdown</strong> — heaviness, fog, flatness, feeling disconnected from yourself and the world around you.<br><br>Your body pressed the emergency brake. The goal now is to bring it back gently — not to push through, and not to force it.',
+    tcmTitle:'What Chinese Medicine sees',
+    tcmBody:'TCM recognises this as <strong>Kidney Yang Depletion</strong> — your body\'s deepest energy reserves are low. The Spleen, which governs mental clarity and motivation, can no longer lift and transform. This is a depletion pattern, not a stuck pattern. It needs warmth and gentle upward movement — not the same approach as stress activation.',
+    acuName:'LI4 — Hégǔ', acuSub:'Gentle activation point · Web between thumb and index finger',
+    acuLocation:'The fleshy web between your thumb and index finger — at the highest point of the muscle when you press them gently together.',
+    acuSteps:['Press your right thumb gently into the web of your left hand.','Apply light, slow pressure — lighter than you might expect.','Hold for 30–60 seconds. Breathe slowly and fully.','Repeat on the other hand.','In a depleted state, this point creates safe, gentle activation — bringing your system up without overwhelming it.'],
+    breathName:'Box Breathing', breathSub:'4·4·4·4 — structured re-engagement',
+    breathTag:'Activating', breathTagColor:'#4A4540', breathTagBg:'#F5F0E8',
+    breathEffect:'Structure is what a depleted nervous system needs. The counted rhythm gives your mind something concrete to follow — gently re-engaging awareness and beginning to rebuild energy.',
+    breathSteps:['Inhale through the nose for 4 counts.','Hold at the top for 4 counts.','Exhale through the nose for 4 counts.','Hold at the bottom for 4 counts.','Repeat 4–6 rounds. Keep it slow and gentle — no effort, no forcing.'],
+    handoffLine:'Your body is asking for careful, targeted support today. Your practitioner will walk you through what this pattern means and how to gently bring your energy back.'
+  }
+};
+
+function buildResult(tier) {
+  var d = TIERS[tier];
+  document.getElementById('score-hero').innerHTML =
+    '<div class="score-badge" style="background:'+d.bgLight+';color:'+d.color+'">'+
+      '<span style="width:6px;height:6px;border-radius:50%;background:'+d.color+';display:inline-block;margin-right:4px;"></span>'+d.badge+
+    '</div>'+
+    '<div class="score-num" style="color:'+d.color+'">'+score+'</div>'+
+    '<div class="score-unit">seconds</div>'+
+    '<div class="score-level">'+d.level+'</div>'+
+    '<p class="score-tagline">'+d.tagline+'</p>';
+
+  document.getElementById('result-body').innerHTML =
+    '<div class="r-label">What this means for you</div>'+
+    '<div class="r-card"><div class="r-card-lbl">'+d.bodyTitle+'</div><p>'+d.body+'</p></div>'+
+    '<div class="tcm-card"><div class="tcm-eye">TCM Insight</div><div class="tcm-title">'+d.tcmTitle+'</div><div class="tcm-body">'+d.tcmBody+'</div></div>'+
+    '<div class="r-label">What to do right now</div>'+
+    '<div class="acu-card">'+
+      '<div class="acu-header"><div class="acu-name">'+d.acuName+'</div><div class="acu-sub">'+d.acuSub+'</div></div>'+
+      '<div class="acu-body">'+
+        '<div class="acu-location"><div class="acu-loc-icon">📍</div><div class="acu-loc-text">'+d.acuLocation+'</div></div>'+
+        '<div class="acu-steps">'+d.acuSteps.map(function(s,i){return '<div class="acu-step"><div class="acu-step-n">'+(i+1)+'</div>'+s+'</div>';}).join('')+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="breath-card">'+
+      '<div class="breath-header">'+
+        '<div><div class="breath-name">'+d.breathName+'</div><div style="font-size:11px;color:var(--ink-muted);margin-top:2px;">'+d.breathSub+'</div></div>'+
+        '<span class="breath-tag" style="background:'+d.breathTagBg+';color:'+d.breathTagColor+'">'+d.breathTag+'</span>'+
+      '</div>'+
+      '<div class="breath-body">'+
+        '<div class="breath-effect">'+d.breathEffect+'</div>'+
+        '<div class="breath-steps">'+d.breathSteps.map(function(s,i){return '<div class="breath-step"><div class="breath-step-n">'+(i+1)+'</div>'+s+'</div>';}).join('')+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="screenshot-note"><div>📸</div><div><strong>Screenshot this page</strong> — your acupoint and breath technique are here whenever you need them at home.</div></div>'+
+    '<div class="handoff">'+
+      '<div class="handoff-eye">What next for you</div>'+
+      '<div class="handoff-title">Ready to go deeper?</div>'+
+      '<div class="handoff-body">Your result is a starting point — not a destination. Here is how we can support you further.</div>'+
+      '<div class="handoff-actions">'+
+        '<a href="mailto:ec_contact@ecmetaphysics.com?subject=1-1%20Nervous%20System%20Reset%20Enquiry" class="handoff-action-btn handoff-primary">'+
+          '<span class="ha-icon">🌿</span>'+
+          '<div class="ha-text"><div class="ha-title">Book 1-1 Mind-Body Coaching with Esther</div><div class="ha-sub">TTDI Studio, KL</div></div>'+
+        '</a>'+
+        '<a href="https://www.instagram.com/ecmetaphysicsholistic" target="_blank" class="handoff-action-btn handoff-secondary">'+
+          '<span class="ha-icon">✨</span>'+
+          '<div class="ha-text"><div class="ha-title">Follow us on Instagram</div><div class="ha-sub">@ecmetaphysicsholistic — workshops, tips and events</div></div>'+
+        '</a>'+
+        '<a href="mailto:ec_contact@ecmetaphysics.com" class="handoff-action-btn handoff-secondary">'+
+          '<span class="ha-icon">✉️</span>'+
+          '<div class="ha-text"><div class="ha-title">Get in touch</div><div class="ha-sub">ec_contact@ecmetaphysics.com</div></div>'+
+        '</a>'+
+      '</div>'+
+    '</div>'+
+    '<div class="retake"><button onclick="retake()">← Take the test again</button></div>';
+}
+
+function retake() {
+  clearInterval(timerInt); t0=null; score=0; triageAnswers=[];
+  document.getElementById('t-display').textContent='0';
+  document.getElementById('ring-fill').style.strokeDashoffset='565';
+  document.getElementById('t-hint').textContent='Exhale slowly and steadily through your nose';
+  go('s-intro');
+}
+</script>
+</body>
+</html>
